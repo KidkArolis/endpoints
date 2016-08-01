@@ -15,7 +15,14 @@ module.exports = function (config, baseUrl) {
   return function (request, response) {
     const server = 'express'; // detect if hapi or express here
     const process = requestHandler[method].bind(requestHandler);
+    let serialize, beforeSend;
+    if (config.actions && config.actions[method] && config.actions[method].serialize) {
+      serialize = config.actions[method].serialize || (x => x);
+    }
     const format = payloadHandler[method].bind(payloadHandler, config);
+    if (config.actions && config.actions[method] && config.actions[method].beforeSend) {
+      beforeSend = config.actions[method].beforeSend || (x => x);
+    }
     const respond = (responder ? responder : send[server]).bind(null, response);
     const errors = requestHandler.validate(request);
 
@@ -23,7 +30,9 @@ module.exports = function (config, baseUrl) {
       respond(payloadHandler.error(errors));
     } else {
       process(request)
+        .then(serialize)
         .then(format)
+        .then(beforeSend)
         .then(respond)
         .catch(function (err) {
           //throw err;

@@ -34,6 +34,10 @@ class RequestHandler {
     return this.config.model;
   }
 
+  get actions() {
+    return this.config.actions;
+  }
+
   /**
     A function that, given a request, validates the request.
 
@@ -137,11 +141,14 @@ class RequestHandler {
   */
   read (request) {
     const id = request.params.id;
-    const query = this.query(request);
+    let query = this.query(request);
     if (id) {
       // FIXME: this could collide with filter[id]=#
       query.filter.id = id;
       query.singleResult = true;
+    }
+    if (this.actions && this.actions.read && this.actions.read.query) {
+      query = this.actions.read.query(request, query);
     }
     return this.store.read(this.model, query);
   }

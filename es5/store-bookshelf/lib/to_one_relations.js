@@ -37,6 +37,7 @@ function toOneRelations(model) {
     var relatedData = related.relatedData;
     // is this relation of a kind we care about? if yes, add it!
     // TODO: support polymorphic relations.
+    console.log('RELATED DATA', relatedData);
     if (relatedData.type === 'belongsTo' || relatedData.type === 'hasOne') {
       result[relation] = relatedData.foreignKey;
     }

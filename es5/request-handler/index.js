@@ -170,6 +170,9 @@ var RequestHandler = (function () {
       query.filter.id = id;
       query.singleResult = true;
     }
+    if (this.actions && this.actions.read && this.actions.read.query) {
+      query = this.actions.read.query(request, query);
+    }
     return this.store.read(this.model, query);
   };
 
@@ -246,6 +249,11 @@ var RequestHandler = (function () {
     key: 'model',
     get: function get() {
       return this.config.model;
+    }
+  }, {
+    key: 'actions',
+    get: function get() {
+      return this.config.actions;
     }
   }]);
 

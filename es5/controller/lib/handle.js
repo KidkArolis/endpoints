@@ -31,14 +31,26 @@ module.exports = function (config, baseUrl) {
   return function (request, response) {
     var server = 'express'; // detect if hapi or express here
     var process = requestHandler[method].bind(requestHandler);
+    var serialize = undefined,
+        beforeSend = undefined;
+    if (config.actions && config.actions[method] && config.actions[method].serialize) {
+      serialize = config.actions[method].serialize || function (x) {
+        return x;
+      };
+    }
     var format = payloadHandler[method].bind(payloadHandler, config);
+    if (config.actions && config.actions[method] && config.actions[method].beforeSend) {
+      beforeSend = config.actions[method].beforeSend || function (x) {
+        return x;
+      };
+    }
     var respond = (responder ? responder : send[server]).bind(null, response);
     var errors = requestHandler.validate(request);
 
     if (errors) {
       respond(payloadHandler.error(errors));
     } else {
-      process(request).then(format).then(respond)['catch'](function (err) {
+      process(request).then(serialize).then(format).then(beforeSend).then(respond)['catch'](function (err) {
         //throw err;
         return respond(payloadHandler.error(err));
       });
